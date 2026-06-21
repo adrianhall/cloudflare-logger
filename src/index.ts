@@ -11,6 +11,7 @@
  */
 
 export { createLogger } from "./logger.js";
+export { resolveLoggerConfig } from "./resolve.js";
 export { serializeError } from "./serialize.js";
 export { createBrowserTransport } from "./transports/browser.js";
 export { createCaptureTransport } from "./transports/capture.js";

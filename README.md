@@ -20,7 +20,7 @@ Implementation is tracked in [`docs/ENG_SPEC.md`](./docs/ENG_SPEC.md), section 2
 | 3     | Logger engine               | Complete |
 | 4     | Internal formatting helpers | Complete |
 | 5     | Built-in transports         | Complete |
-| 6     | Default config helper       | Pending  |
+| 6     | Default config helper       | Complete |
 | 7     | React subpath               | Pending  |
 | 8     | Package verification        | Pending  |
 | 9     | Documentation completion    | Pending  |
