@@ -1,0 +1,10 @@
+{
+  // Minimal Worker configuration used only by the `workers` Vitest project to
+  // host tests inside the Cloudflare Workers runtime (workerd) via Miniflare.
+  //
+  // The logger is intended to prove Worker portability WITHOUT Node
+  // compatibility shims, so `nodejs_compat` is intentionally omitted.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-logger",
+  "compatibility_date": "2025-06-01"
+}

@@ -16,14 +16,14 @@ runtime, framework, and request lifecycle.
 
 The primary use cases are:
 
-| Use case | Expected behavior |
-| --- | --- |
-| Vitest unit/integration tests | Capture records deterministically without console noise. |
-| Local browser development | Emit inspectable records to browser DevTools with useful severity mapping. |
-| Local Worker development | Emit readable, colorized terminal logs for `wrangler dev`. |
-| Production Workers | Emit structured JSON-compatible records to Cloudflare Workers Logs. |
-| Production browser code | Emit structured records or warnings/errors using console methods without pulling Worker-only code. |
-| React applications | Provide a configured logger through React context without coupling logger construction to React. |
+| Use case                      | Expected behavior                                                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| Vitest unit/integration tests | Capture records deterministically without console noise.                                           |
+| Local browser development     | Emit inspectable records to browser DevTools with useful severity mapping.                         |
+| Local Worker development      | Emit readable, colorized terminal logs for `wrangler dev`.                                         |
+| Production Workers            | Emit structured JSON-compatible records to Cloudflare Workers Logs.                                |
+| Production browser code       | Emit structured records or warnings/errors using console methods without pulling Worker-only code. |
+| React applications            | Provide a configured logger through React context without coupling logger construction to React.   |
 
 ## 2. Goals
 
@@ -67,11 +67,11 @@ The primary use cases are:
 
 ## 5. Runtime Support
 
-| Runtime | Support level | Notes |
-| --- | --- | --- |
-| Cloudflare Workers | Required | Validate with `@cloudflare/vitest-pool-workers`. Do not rely on Node APIs. |
-| Browser | Required | Validate browser transport and React integration with jsdom. |
-| Node | Required for tests and package verification | Validate pure logic and package exports with Vitest and direct import tests. |
+| Runtime            | Support level                               | Notes                                                                        |
+| ------------------ | ------------------------------------------- | ---------------------------------------------------------------------------- |
+| Cloudflare Workers | Required                                    | Validate with `@cloudflare/vitest-pool-workers`. Do not rely on Node APIs.   |
+| Browser            | Required                                    | Validate browser transport and React integration with jsdom.                 |
+| Node               | Required for tests and package verification | Validate pure logic and package exports with Vitest and direct import tests. |
 
 The implementation must avoid Node-only APIs in `src/**` unless the file is test-only or tooling-only.
 
@@ -81,25 +81,25 @@ The Worker test project should run without `nodejs_compat` unless a specific, do
 
 The package has two public entry points.
 
-| Import | Purpose | Runtime |
-| --- | --- | --- |
-| `@adrianhall/cloudflare-logger` | Core logger, types, transports, default config helper. | Browser, Worker, Node tests. |
-| `@adrianhall/cloudflare-logger/react` | React provider and hook. | Browser React applications. |
+| Import                                | Purpose                                                | Runtime                      |
+| ------------------------------------- | ------------------------------------------------------ | ---------------------------- |
+| `@adrianhall/cloudflare-logger`       | Core logger, types, transports, default config helper. | Browser, Worker, Node tests. |
+| `@adrianhall/cloudflare-logger/react` | React provider and hook.                               | Browser React applications.  |
 
 The core entry point must not import React. The `/react` entry point may import React and may depend on React peer dependencies.
 
 ### 6.1 Recommended Core Exports
 
 ```ts
-export { createLogger } from './logger.js';
-export { serializeError } from './serialize.js';
-export { resolveLoggerConfig } from './resolve.js';
-export { createBrowserTransport } from './transports/browser.js';
-export { createCaptureTransport } from './transports/capture.js';
-export { combineTransports } from './transports/combine.js';
-export { createConsoleTransport } from './transports/console.js';
-export { createSilentTransport } from './transports/silent.js';
-export { createStructuredTransport } from './transports/structured.js';
+export { createLogger } from "./logger.js";
+export { serializeError } from "./serialize.js";
+export { resolveLoggerConfig } from "./resolve.js";
+export { createBrowserTransport } from "./transports/browser.js";
+export { createCaptureTransport } from "./transports/capture.js";
+export { combineTransports } from "./transports/combine.js";
+export { createConsoleTransport } from "./transports/console.js";
+export { createSilentTransport } from "./transports/silent.js";
+export { createStructuredTransport } from "./transports/structured.js";
 export type {
   CaptureTransport,
   CreateLoggerOptions,
@@ -112,7 +112,7 @@ export type {
   Runtime,
   Transport,
   TransportErrorHandler
-} from './types.js';
+} from "./types.js";
 ```
 
 Decision: use `.js` extensions in source imports for emitted ESM correctness. This intentionally differs from the earlier draft's barrel convention if needed. A package that emits plain ESM with `tsc` should be directly importable by Node and bundlers after build.
@@ -120,9 +120,9 @@ Decision: use `.js` extensions in source imports for emitted ESM correctness. Th
 ### 6.2 Recommended React Exports
 
 ```ts
-export { LoggingProvider } from './LoggingProvider.js';
-export { useLogger } from './useLogger.js';
-export type { LoggingProviderProps } from './LoggingProvider.js';
+export { LoggingProvider } from "./LoggingProvider.js";
+export { useLogger } from "./useLogger.js";
+export type { LoggingProviderProps } from "./LoggingProvider.js";
 ```
 
 ### 6.3 Surface Area Rules
@@ -254,7 +254,7 @@ The package should be validated by direct-import tests against `dist/` before ta
 ## 8. Core Types
 
 ```ts
-export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
 export type LogContext = Record<string, unknown>;
 
@@ -351,11 +351,11 @@ Disabled call example:
 ```ts
 const context = {
   get expensive() {
-    throw new Error('should not run');
+    throw new Error("should not run");
   }
 };
 
-logger.debug('suppressed', context);
+logger.debug("suppressed", context);
 ```
 
 If `debug` is disabled, the getter must not be evaluated.
@@ -445,7 +445,7 @@ Required behavior:
 Example:
 
 ```ts
-logger.error('save failed', { err });
+logger.error("save failed", { err });
 ```
 
 Resulting context shape:
@@ -543,7 +543,7 @@ Required behavior:
 Example output call shape:
 
 ```ts
-console.info('%cINFO', '...', 'user loaded', { userId: '123' });
+console.info("%cINFO", "...", "user loaded", { userId: "123" });
 ```
 
 ### 14.4 Console Transport
@@ -551,7 +551,7 @@ console.info('%cINFO', '...', 'user loaded', { userId: '123' });
 ```ts
 export interface ConsoleTransportOptions {
   readonly colors?: boolean;
-  readonly timestamp?: 'time' | 'iso' | false;
+  readonly timestamp?: "time" | "iso" | false;
 }
 
 export function createConsoleTransport(options?: ConsoleTransportOptions): Transport;
@@ -620,8 +620,8 @@ Required behavior:
 ## 15. Default Config Helper
 
 ```ts
-export type Environment = 'test' | 'development' | 'production' | (string & {});
-export type Runtime = 'browser' | 'worker';
+export type Environment = "test" | "development" | "production" | (string & {});
+export type Runtime = "browser" | "worker";
 
 export interface ResolvedLoggerConfig {
   readonly level: LogLevel;
@@ -647,16 +647,16 @@ Required behavior:
 
 Policy table:
 
-| Environment | Runtime | Level | Transport |
-| --- | --- | --- | --- |
-| `test` | `browser` | `trace` | capture |
-| `test` | `worker` | `trace` | capture |
-| `development` | `browser` | `info` | browser |
-| `development` | `worker` | `debug` | console |
-| `production` | `browser` | `warn` | browser |
-| `production` | `worker` | `warn` | structured |
-| unknown | `browser` | `warn` | browser |
-| unknown | `worker` | `warn` | structured |
+| Environment   | Runtime   | Level   | Transport  |
+| ------------- | --------- | ------- | ---------- |
+| `test`        | `browser` | `trace` | capture    |
+| `test`        | `worker`  | `trace` | capture    |
+| `development` | `browser` | `info`  | browser    |
+| `development` | `worker`  | `debug` | console    |
+| `production`  | `browser` | `warn`  | browser    |
+| `production`  | `worker`  | `warn`  | structured |
+| unknown       | `browser` | `warn`  | browser    |
+| unknown       | `worker`  | `warn`  | structured |
 
 `detectRuntime()` is not exported in v1. Runtime detection is easy to get subtly wrong, especially because Node, Workers, service workers, and browser-like test environments overlap. Applications are expected to know whether they are constructing a browser logger or a Worker logger.
 
@@ -665,7 +665,7 @@ Policy table:
 The React subpath provides context wiring only. It does not construct loggers and does not read environment.
 
 ```ts
-import type { Logger, LogContext } from '@adrianhall/cloudflare-logger';
+import type { Logger, LogContext } from "@adrianhall/cloudflare-logger";
 
 export interface LoggingProviderProps {
   readonly logger: Logger;
@@ -696,11 +696,11 @@ Recommendation for `useLogger(bindings)` memoization:
 Example:
 
 ```tsx
-import { useEffect } from 'react';
-import { createLogger, resolveLoggerConfig } from '@adrianhall/cloudflare-logger';
-import { LoggingProvider, useLogger } from '@adrianhall/cloudflare-logger/react';
+import { useEffect } from "react";
+import { createLogger, resolveLoggerConfig } from "@adrianhall/cloudflare-logger";
+import { LoggingProvider, useLogger } from "@adrianhall/cloudflare-logger/react";
 
-const logger = createLogger(resolveLoggerConfig('development', 'browser'));
+const logger = createLogger(resolveLoggerConfig("development", "browser"));
 
 function Root() {
   return (
@@ -711,10 +711,10 @@ function Root() {
 }
 
 function Widget() {
-  const log = useLogger({ component: 'Widget' });
+  const log = useLogger({ component: "Widget" });
 
   useEffect(() => {
-    log.info('mounted');
+    log.info("mounted");
   }, [log]);
 
   return null;
@@ -789,13 +789,13 @@ Recommended configuration approach:
 
 Recommended tsconfig split:
 
-| Config | Purpose |
-| --- | --- |
-| `tsconfig.base.json` | Shared strict compiler options. |
-| `src/tsconfig.json` | Core source typecheck. |
-| `src/react/tsconfig.json` | React source typecheck with JSX and DOM. |
-| `tsconfig.build.json` | Emit declarations and JavaScript to `dist/`. |
-| `test/*/tsconfig.json` | Test-project-specific globals and runtime types. |
+| Config                    | Purpose                                          |
+| ------------------------- | ------------------------------------------------ |
+| `tsconfig.base.json`      | Shared strict compiler options.                  |
+| `src/tsconfig.json`       | Core source typecheck.                           |
+| `src/react/tsconfig.json` | React source typecheck with JSX and DOM.         |
+| `tsconfig.build.json`     | Emit declarations and JavaScript to `dist/`.     |
+| `test/*/tsconfig.json`    | Test-project-specific globals and runtime types. |
 
 ## 19. Tooling
 
@@ -824,19 +824,19 @@ The library should be fully testable with Vitest.
 
 Use multiple Vitest projects so runtime-specific assumptions are explicit.
 
-| Project | Environment | Purpose |
-| --- | --- | --- |
-| `node` | Node | Pure logic and Node-safe transports. |
-| `browser` | jsdom | Browser transport and React integration. |
-| `workers` | workerd | Worker compatibility and structured console behavior. |
-| `package` | Node | Built package import and export validation. |
+| Project   | Environment | Purpose                                               |
+| --------- | ----------- | ----------------------------------------------------- |
+| `node`    | Node        | Pure logic and Node-safe transports.                  |
+| `browser` | jsdom       | Browser transport and React integration.              |
+| `workers` | workerd     | Worker compatibility and structured console behavior. |
+| `package` | Node        | Built package import and export validation.           |
 
 Tests should import the module under test as `* as sut` unless a test requires a specific named import for clarity.
 
 Use a fixed clock in logger tests:
 
 ```ts
-const clock = () => new Date('2026-01-01T00:00:00.000Z');
+const clock = () => new Date("2026-01-01T00:00:00.000Z");
 ```
 
 ### 20.1 Required Test Cases
@@ -973,12 +973,12 @@ The implementation should include human and agent documentation.
 
 Required files:
 
-| File | Audience | Contents |
-| --- | --- | --- |
-| `README.md` | Human users | Install, quick start, transports, React, testing, release model. |
-| `SKILL.md` | Coding agents | Authoritative usage patterns and anti-patterns. |
-| `docs/ENG_SPEC.md` | Maintainers | Engineering contract and implementation plan. |
-| `CHANGELOG.md` | Maintainers and users | Release notes once versioned releases begin. |
+| File               | Audience              | Contents                                                         |
+| ------------------ | --------------------- | ---------------------------------------------------------------- |
+| `README.md`        | Human users           | Install, quick start, transports, React, testing, release model. |
+| `SKILL.md`         | Coding agents         | Authoritative usage patterns and anti-patterns.                  |
+| `docs/ENG_SPEC.md` | Maintainers           | Engineering contract and implementation plan.                    |
+| `CHANGELOG.md`     | Maintainers and users | Release notes once versioned releases begin.                     |
 
 README required sections:
 

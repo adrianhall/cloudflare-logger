@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "outDir": "../.tsbuild/src",
+    "tsBuildInfoFile": "../.tsbuild/src.tsbuildinfo",
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["react"]
+}

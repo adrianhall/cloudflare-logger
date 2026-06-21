@@ -21,10 +21,10 @@ adapter that decides which transport/level to use per environment (see the compa
 
 ### Public surface (two entry points)
 
-| Import | Contents | Runtime |
-| --- | --- | --- |
-| `@adrianhall/cloudflare-logger` | Engine: `createLogger`, transports, `resolveLoggerConfig`, types, level utils, `serializeError` | browser / workerd / Node (no React, no DOM assumptions beyond `console`) |
-| `@adrianhall/cloudflare-logger/react` | `LoggingProvider`, `useLogger` | browser (React) |
+| Import                                | Contents                                                                                        | Runtime                                                                  |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `@adrianhall/cloudflare-logger`       | Engine: `createLogger`, transports, `resolveLoggerConfig`, types, level utils, `serializeError` | browser / workerd / Node (no React, no DOM assumptions beyond `console`) |
+| `@adrianhall/cloudflare-logger/react` | `LoggingProvider`, `useLogger`                                                                  | browser (React)                                                          |
 
 The core entry point **must not import React or any DOM-only globals** other than the
 universally-available `console`. React lives exclusively under `/react` so Worker
@@ -44,14 +44,14 @@ bundles never pull it in.
 
 ### Design decisions (carried from review)
 
-| Decision | Choice |
-| --- | --- |
-| Method signature | `console`-like: `logger.info(message, context?)` |
-| Levels | `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
+| Decision            | Choice                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| Method signature    | `console`-like: `logger.info(message, context?)`                                            |
+| Levels              | `trace`, `debug`, `info`, `warn`, `error`, `fatal`                                          |
 | Transport selection | **Explicit** transport on `createLogger`; `resolveLoggerConfig` is an opt-in default policy |
-| Test capture | Instance-based **capture transport** exposing `.records` getter + `.clear()` |
-| Redaction | **Out of scope** for v1 (see §14) |
-| Dependencies | **Zero runtime deps**; React is an optional peer for `/react` only |
+| Test capture        | Instance-based **capture transport** exposing `.records` getter + `.clear()`                |
+| Redaction           | **Out of scope** for v1 (see §14)                                                           |
+| Dependencies        | **Zero runtime deps**; React is an optional peer for `/react` only                          |
 
 ## 2. Package & distribution
 
@@ -143,7 +143,7 @@ matching the existing `cloudflare-auth`/`circlemud-parser` workflow.
 ## 3. Levels
 
 ```ts
-export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
 export const LOG_LEVELS: Readonly<Record<LogLevel, number>> = {
   trace: 10,
@@ -319,8 +319,8 @@ A small, overridable policy so consumers don't re-derive the common mapping. App
 ignore it and construct transports directly.
 
 ```ts
-export type Environment = 'test' | 'development' | 'production';
-export type Runtime = 'browser' | 'worker';
+export type Environment = "test" | "development" | "production";
+export type Runtime = "browser" | "worker";
 
 export interface ResolvedLoggerConfig {
   level: LogLevel;
@@ -339,13 +339,13 @@ export function detectRuntime(): Runtime;
 
 ### Default policy table
 
-| `environment` | `runtime` | `level` | transport |
-| --- | --- | --- | --- |
-| `test` | any | `trace` | capture (no emit) |
-| `development` | `browser` | `info` | browser DevTools |
-| `development` | `worker` | `debug` | console (colorized + timestamped) |
-| `production` | `worker` | `warn` | structured |
-| `production` | `browser` | `warn` | structured |
+| `environment` | `runtime` | `level` | transport                         |
+| ------------- | --------- | ------- | --------------------------------- |
+| `test`        | any       | `trace` | capture (no emit)                 |
+| `development` | `browser` | `info`  | browser DevTools                  |
+| `development` | `worker`  | `debug` | console (colorized + timestamped) |
+| `production`  | `worker`  | `warn`  | structured                        |
+| `production`  | `browser` | `warn`  | structured                        |
 
 - Unknown `environment` → treated as `production`.
 - For `test`, the transport is a fresh capture instance; tests that assert on records
@@ -358,7 +358,7 @@ Provides a context provider and hook so React trees consume a single configured 
 and add component/feature-scoped bindings via child loggers.
 
 ```ts
-import type { Logger, LogContext } from '@adrianhall/cloudflare-logger';
+import type { Logger, LogContext } from "@adrianhall/cloudflare-logger";
 
 export interface LoggingProviderProps {
   /** A fully-configured root logger (built by the app, e.g. via resolveLoggerConfig). */
@@ -385,7 +385,7 @@ Semantics:
 - `useLogger()` returns the context logger; **throws** a clear error when used outside a
   `LoggingProvider`.
 - `useLogger(bindings)` returns `useMemo(() => logger.child(bindings), [logger, <stable
-  binding deps>])`. Bindings are shallow-compared via stable serialization of entries so
+binding deps>])`. Bindings are shallow-compared via stable serialization of entries so
   inline object literals don't thrash the memo. (Open question §13: exact memo key.)
 - The provider is **logger-prop based** (explicit injection). It does **not** read
   environment or build a logger itself — that decision belongs to the app, keeping the
@@ -395,10 +395,10 @@ Semantics:
 Example (app side):
 
 ```tsx
-import { createLogger, resolveLoggerConfig } from '@adrianhall/cloudflare-logger';
-import { LoggingProvider, useLogger } from '@adrianhall/cloudflare-logger/react';
+import { createLogger, resolveLoggerConfig } from "@adrianhall/cloudflare-logger";
+import { LoggingProvider, useLogger } from "@adrianhall/cloudflare-logger/react";
 
-const logger = createLogger(resolveLoggerConfig('development', 'browser'));
+const logger = createLogger(resolveLoggerConfig("development", "browser"));
 
 function Root() {
   return (
@@ -409,8 +409,8 @@ function Root() {
 }
 
 function Widget() {
-  const log = useLogger({ component: 'Widget' });
-  log.info('rendered');
+  const log = useLogger({ component: "Widget" });
+  log.info("rendered");
   return null;
 }
 ```
@@ -561,10 +561,14 @@ through the provided logger's transport (assert via a capture transport).
 
    ```ts
    const transport = createCaptureTransport();
-   const logger = createLogger({ level: 'trace', transport, clock: () => new Date('2026-01-01T00:00:00Z') });
+   const logger = createLogger({
+     level: "trace",
+     transport,
+     clock: () => new Date("2026-01-01T00:00:00Z")
+   });
    // exercise code …
    expect(transport.records).toContainEqual(
-     expect.objectContaining({ levelName: 'warn', message: 'rate limited' })
+     expect.objectContaining({ levelName: "warn", message: "rate limited" })
    );
    ```
 

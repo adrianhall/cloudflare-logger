@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ">=24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run check:format
+
+      - name: Lint
+        run: npm run check:lint
+
+      - name: Typecheck
+        run: npm run check:types
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      # The following enforce that committed `dist/` matches source and that the
+      # published tarball contains the expected files. They are wired in once the
+      # build emits real artifacts (see ENG_SPEC.md Phase 8).
+      - name: Verify dist is current
+        run: test -z "$(git status --porcelain -- dist)"
+
+      - name: Verify package contents
+        run: npm pack --dry-run --ignore-scripts
