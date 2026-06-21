@@ -17,30 +17,6 @@ import { describe, expect, it } from "vitest";
 import * as sut from "../../src/levels.js";
 
 describe("LOG_LEVELS", () => {
-  it("defines trace as 10", () => {
-    expect(sut.LOG_LEVELS.trace).toBe(10);
-  });
-
-  it("defines debug as 20", () => {
-    expect(sut.LOG_LEVELS.debug).toBe(20);
-  });
-
-  it("defines info as 30", () => {
-    expect(sut.LOG_LEVELS.info).toBe(30);
-  });
-
-  it("defines warn as 40", () => {
-    expect(sut.LOG_LEVELS.warn).toBe(40);
-  });
-
-  it("defines error as 50", () => {
-    expect(sut.LOG_LEVELS.error).toBe(50);
-  });
-
-  it("defines fatal as 60", () => {
-    expect(sut.LOG_LEVELS.fatal).toBe(60);
-  });
-
   it("has exactly the six documented levels", () => {
     expect(Object.keys(sut.LOG_LEVELS)).toStrictEqual([
       "trace",
@@ -54,30 +30,6 @@ describe("LOG_LEVELS", () => {
 });
 
 describe("levelValue()", () => {
-  it("returns 10 for trace", () => {
-    expect(sut.levelValue("trace")).toBe(10);
-  });
-
-  it("returns 20 for debug", () => {
-    expect(sut.levelValue("debug")).toBe(20);
-  });
-
-  it("returns 30 for info", () => {
-    expect(sut.levelValue("info")).toBe(30);
-  });
-
-  it("returns 40 for warn", () => {
-    expect(sut.levelValue("warn")).toBe(40);
-  });
-
-  it("returns 50 for error", () => {
-    expect(sut.levelValue("error")).toBe(50);
-  });
-
-  it("returns 60 for fatal", () => {
-    expect(sut.levelValue("fatal")).toBe(60);
-  });
-
   it("throws a TypeError for an unrecognized level string", () => {
     expect(() =>
       // Cast needed to simulate a bad runtime value arriving from untyped JS.

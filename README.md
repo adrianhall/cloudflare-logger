@@ -4,27 +4,27 @@
 > tests, local development, browsers, and Cloudflare Workers.
 
 > [!WARNING]
-> This package is under active development. The repository scaffold is in place
-> (ENG_SPEC.md Phase 1); the logging engine, transports, React subpath, and
-> documentation are still being implemented.
+> This package is under active development. The core logger engine is implemented
+> (phases 1–3); transports, React subpath, and full documentation are still being
+> implemented.
 
 ## Status
 
 Implementation is tracked in [`docs/ENG_SPEC.md`](./docs/ENG_SPEC.md), section 25
 (Implementation Plan).
 
-| Phase | Description                 | Status      |
-| ----- | --------------------------- | ----------- |
-| 1     | Repository scaffold         | In progress |
-| 2     | Core types and levels       | Pending     |
-| 3     | Logger engine               | Pending     |
-| 4     | Internal formatting helpers | Pending     |
-| 5     | Built-in transports         | Pending     |
-| 6     | Default config helper       | Pending     |
-| 7     | React subpath               | Pending     |
-| 8     | Package verification        | Pending     |
-| 9     | Documentation completion    | Pending     |
-| 10    | Release candidate           | Pending     |
+| Phase | Description                 | Status   |
+| ----- | --------------------------- | -------- |
+| 1     | Repository scaffold         | Complete |
+| 2     | Core types and levels       | Complete |
+| 3     | Logger engine               | Complete |
+| 4     | Internal formatting helpers | Pending  |
+| 5     | Built-in transports         | Pending  |
+| 6     | Default config helper       | Pending  |
+| 7     | React subpath               | Pending  |
+| 8     | Package verification        | Pending  |
+| 9     | Documentation completion    | Pending  |
+| 10    | Release candidate           | Pending  |
 
 ## Development
 
