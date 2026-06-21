@@ -18,7 +18,7 @@ Implementation is tracked in [`docs/ENG_SPEC.md`](./docs/ENG_SPEC.md), section 2
 | 1     | Repository scaffold         | Complete |
 | 2     | Core types and levels       | Complete |
 | 3     | Logger engine               | Complete |
-| 4     | Internal formatting helpers | Pending  |
+| 4     | Internal formatting helpers | Complete |
 | 5     | Built-in transports         | Pending  |
 | 6     | Default config helper       | Pending  |
 | 7     | React subpath               | Pending  |
