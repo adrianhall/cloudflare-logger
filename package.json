@@ -33,7 +33,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "check": "run-s check:*",
-    "check:dist": "npm run build && test -z \"$(git status --porcelain -- dist)\"",
+    "check:dist": "node scripts/check-dist.mjs",
     "check:format": "prettier --check .",
     "check:lint": "eslint .",
     "check:pack": "npm pack --dry-run --ignore-scripts",
