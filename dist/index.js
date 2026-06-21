@@ -1,8 +1,12 @@
 /**
  * @file Core entry point for `@adrianhall/cloudflare-logger`.
  *
- * Placeholder barrel created during Phase 1 (repository scaffold). Real exports
- * are added in later phases per `docs/ENG_SPEC.md`.
+ * Exports are added incrementally across implementation phases as described in
+ * `docs/ENG_SPEC.md`. Phase 2 adds public types; later phases add runtime
+ * implementations.
+ *
+ * React exports live exclusively under `@adrianhall/cloudflare-logger/react`.
+ * This entry point must never import React.
  */
 export {};
 //# sourceMappingURL=index.js.map
