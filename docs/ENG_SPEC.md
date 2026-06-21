@@ -167,7 +167,7 @@ Rationale:
     "node": ">= 24",
     "npm": ">= 11"
   },
-  "files": ["dist", "README.md", "SKILL.md", "LICENSE"],
+  "files": ["dist", "skills", "README.md", "LICENSE"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -766,11 +766,16 @@ test/
   package/
     dist-import.test.ts
 README.md
-SKILL.md
 CHANGELOG.md
+skills/
+  cloudflare-logger/
+    SKILL.md
 docs/
   ENG_SPEC.md
 ```
+
+`SKILL.md` lives at `skills/cloudflare-logger/SKILL.md` so it can be consumed with
+`npx skills add`. The `skills` directory is included in the published `files` list.
 
 Implementation files should start with a concise `@file` JSDoc header if this remains part of the project standard.
 

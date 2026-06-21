@@ -16,8 +16,8 @@
   },
   "files": [
     "dist",
+    "skills",
     "README.md",
-    "SKILL.md",
     "LICENSE"
   ],
   "exports": {
