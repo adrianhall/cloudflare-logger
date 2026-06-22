@@ -37,6 +37,22 @@ npm run test:coverage  # all Vitest projects + 100% coverage
 Do not lower the thresholds in `vitest.config.ts` to make a run pass. Close the
 gap properly (see below).
 
+### Pre-commit hook
+
+A Husky pre-commit hook runs Prettier on staged files and re-stages the result
+automatically. It is **developer convenience only** — CI is authoritative. The hook
+is `prepare`-free (no `prepare` script in `package.json`) to avoid penalising
+git-tag consumers who install the package via `github:adrianhall/cloudflare-logger#tag`.
+
+After cloning, activate the hook once:
+
+```sh
+npm run setup:hooks
+```
+
+The hook file lives at `.husky/pre-commit` and must not be edited to run builds,
+tests, or `dist/` generation — those remain CI responsibilities (ENG_SPEC §7/§19).
+
 ## How to reach 100% coverage
 
 When coverage drops below 100%, analyze the uncovered line and resolve it in this

@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# Auto-format staged files with Prettier before each commit.
+# Only touches files that are already staged (ACMR filter).
+# Re-stages any files that Prettier rewrites so the commit includes the fix.
+# Note: husky adds node_modules/.bin to PATH, so `prettier` resolves to the local devDep.
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+echo "$staged" | sed 's| |\\ |g' | xargs prettier --write --ignore-unknown
+git update-index --again

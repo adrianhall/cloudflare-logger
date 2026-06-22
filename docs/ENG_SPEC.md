@@ -935,11 +935,17 @@ Required tools:
 - `npm-run-all2` for script orchestration.
 - GitHub Actions with Node `>= 24`.
 
-Husky recommendation:
+Husky:
 
-- Do not use Husky to guarantee `dist/` freshness.
-- A local pre-commit hook may be added later as a developer convenience only.
-- CI must remain the authoritative enforcement mechanism.
+- Husky is installed as a devDependency. A pre-commit hook at `.husky/pre-commit`
+  runs Prettier on staged files and re-stages the result before each commit.
+- The hook is **developer convenience only** — CI is the authoritative enforcement
+  mechanism for formatting, linting, types, and coverage.
+- There is **no `prepare` script**. Activating the hook requires running
+  `npm run setup:hooks` once per clone. This deliberately avoids penalising
+  git-tag consumers who would otherwise trigger a `prepare` build on install.
+- Do not use the hook to guarantee `dist/` freshness, run tests, or build the
+  package. Those responsibilities remain with CI.
 
 ## 20. Testing Strategy
 
