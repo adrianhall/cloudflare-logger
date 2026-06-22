@@ -1,0 +1,1 @@
+{"version":3,"file":"structured.d.ts","sourceRoot":"","sources":["../../src/transports/structured.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;;;;GAiBG;AAGH,OAAO,KAAK,EAAE,WAAW,EAAqB,MAAM,wBAAwB,CAAC;AAE7E,OAAO,KAAK,EAAuB,0BAA0B,EAAE,SAAS,EAAE,MAAM,aAAa,CAAC;AAY9F;;;;;;GAMG;AACH,wBAAgB,yBAAyB,CACvC,OAAO,CAAC,EAAE,0BAA0B,EACpC,QAAQ,GAAE,WAAqB,GAC9B,SAAS,CAuBX"}

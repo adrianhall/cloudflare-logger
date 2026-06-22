@@ -186,6 +186,111 @@ purpose. Match the existing style when adding files.
 - `npm run check` and `npm run test:coverage` are the gates that matter; the
   full release flow lives in `docs/ENG_SPEC.md` §24.
 
+## Creating a release
+
+Follow these steps in order. Do not skip or reorder them. Every step must
+succeed before moving to the next.
+
+### 1. Decide the version number
+
+Choose `X.Y.Z` following [Semantic Versioning](https://semver.org/). The tag
+format is `X.Y.Z` — no `v` prefix.
+
+### 2. Update `package.json`
+
+Set `"version"` to the new `X.Y.Z` value.
+
+### 3. Update `CHANGELOG.md`
+
+Rename the `## [Unreleased]` heading to `## [X.Y.Z] — YYYY-MM-DD` and add a
+new empty `## [Unreleased]` section above it. Document all changes since the
+previous release under the appropriate subsections (`Added`, `Changed`,
+`Fixed`, `Removed`).
+
+### 4. Update `README.md`
+
+Wherever the file contains an installation instruction or a reference to a
+specific release tag, update it to `X.Y.Z`. At minimum this means any
+`npm install` or `package.json` snippet that pins the git tag:
+
+```
+github:adrianhall/cloudflare-logger#X.Y.Z
+```
+
+### 5. Update `skills/cloudflare-logger/SKILL.md`
+
+Apply the same version-tag update to any installation or import snippets in
+the skill file so agents consuming the skill get the correct pin.
+
+### 6. Run the quality gates
+
+Both commands must exit zero:
+
+```sh
+npm run check          # format, lint, types, dist freshness, pack
+npm run test:coverage  # all Vitest projects + 100% coverage
+```
+
+If either fails, fix the underlying issue before continuing. Do not lower
+coverage thresholds or suppress lint errors to force a pass.
+
+### 7. Rebuild and stage `dist/`
+
+```sh
+npm run release        # tsc build + git add dist
+```
+
+This regenerates `dist/` from source and stages all changed files under
+`dist/`. Do not hand-edit `dist/`.
+
+### 8. Verify the staged changes
+
+```sh
+git diff --cached --stat
+```
+
+The staged set must include:
+
+- `package.json` (version bump)
+- `CHANGELOG.md` (release entry)
+- `README.md` (tag reference update, if present)
+- `skills/cloudflare-logger/SKILL.md` (tag reference update, if present)
+- `dist/` files (only generated output — no hand edits)
+
+If unintended files are staged, unstage them before committing.
+
+### 9. Commit with a conventional commit message
+
+```sh
+git commit -m "chore: release X.Y.Z"
+```
+
+Include all staged files (source, docs, and `dist/`) in a single commit.
+
+### 10. Create the release tag
+
+```sh
+git tag X.Y.Z
+```
+
+No `v` prefix. The tag must point to the commit created in step 9.
+
+### 11. Push the commit and tag
+
+```sh
+git push origin main
+git push origin X.Y.Z
+```
+
+Consumers depend on the tag directly:
+
+```
+github:adrianhall/cloudflare-logger#X.Y.Z
+```
+
+The tag must be pushed before announcing the release. Once a tag is pushed
+and consumed, do not delete or move it.
+
 ## Security
 
 v1 does **not** redact secrets or PII. Never log tokens, passwords, cookies, API

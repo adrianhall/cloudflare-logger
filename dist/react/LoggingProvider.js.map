@@ -1,0 +1,1 @@
+{"version":3,"file":"LoggingProvider.js","sourceRoot":"","sources":["../../src/react/LoggingProvider.tsx"],"names":[],"mappings":";AAUA,OAAO,EAAE,cAAc,EAAE,MAAM,cAAc,CAAC;AAY9C;;;;;;;;;;;;;;;;;;;GAmBG;AACH,MAAM,UAAU,eAAe,CAAC,EAAE,MAAM,EAAE,QAAQ,EAAwB;IACxE,OAAO,KAAC,cAAc,CAAC,QAAQ,IAAC,KAAK,EAAE,MAAM,YAAG,QAAQ,GAA2B,CAAC;AACtF,CAAC"}
