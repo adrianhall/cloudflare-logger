@@ -30,7 +30,13 @@ export default defineConfig({
       provider: "istanbul",
       reporter: ["text", "lcov"],
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.d.ts", "src/**/index.ts"]
+      exclude: ["src/**/*.d.ts", "src/**/index.ts"],
+      thresholds: {
+        statements: 100,
+        branches: 100,
+        functions: 100,
+        lines: 100
+      }
     }
   }
 });
