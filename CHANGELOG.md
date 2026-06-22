@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Hono subpath (`@adrianhall/cloudflare-logger/hono`): `loggingMiddleware` Hono
+  middleware that attaches a request-scoped logger to `c.var.LOGGER` and logs each
+  request and response at `trace`. It resolves the environment from an optional
+  argument or `c.env.ENVIRONMENT`, derives a correlation id from the `CF-Ray` header
+  (falling back to `crypto.randomUUID()`), records request/response headers and cookie
+  **names** only, redacts the `Authorization` and `CF-Access-Jwt-Authorization` headers
+  to a presence indicator, includes response `status` and `durationMs`, and logs a
+  64-byte response body preview. Exposes `LoggingMiddlewareOptions`, `LoggerBindings`,
+  and `LoggerVariables` types. `hono` is an optional peer dependency (`>= 4`) used only
+  by this subpath; the core entry point never imports it.
+
 ## [1.0.0] — 2026-06-22
 
 ### Added

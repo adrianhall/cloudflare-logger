@@ -15,6 +15,12 @@ React support requires React 19 or later as a peer dependency:
 npm install github:adrianhall/cloudflare-logger#1.0.0 react@^19
 ```
 
+The Hono middleware requires Hono 4 or later as a peer dependency:
+
+```sh
+npm install github:adrianhall/cloudflare-logger#1.0.0 hono@^4
+```
+
 ## Quick start
 
 ```ts
@@ -111,6 +117,74 @@ function Widget() {
   return null;
 }
 ```
+
+## Hono middleware example
+
+The `@adrianhall/cloudflare-logger/hono` subpath provides `loggingMiddleware`, which
+attaches a request-scoped logger to the Hono context and logs each request and
+response. `hono` is an optional peer dependency, used only by this subpath — the core
+entry point never imports it.
+
+```ts
+import { Hono } from "hono";
+import { loggingMiddleware } from "@adrianhall/cloudflare-logger/hono";
+import type { LoggerBindings, LoggerVariables } from "@adrianhall/cloudflare-logger/hono";
+
+// Type your app so c.env.ENVIRONMENT and c.var.LOGGER are statically known.
+const app = new Hono<{ Bindings: LoggerBindings; Variables: LoggerVariables }>();
+
+// Pass an environment explicitly...
+app.use("*", loggingMiddleware("production"));
+// ...or omit it and the middleware reads c.env.ENVIRONMENT at request time.
+// app.use("*", loggingMiddleware());
+
+app.get("/", (c) => {
+  // The request-scoped child logger (bound with the correlation id) is on the context.
+  c.var.LOGGER.info("handling request");
+  return c.text("ok");
+});
+
+export default app;
+```
+
+For each request the middleware:
+
+- Resolves the environment from the argument, falling back to `c.env.ENVIRONMENT`, and
+  builds a Worker logger via [`resolveLoggerConfig`](#resolveloggerconfig--default-config-policy).
+- Derives a **correlation id** from the `CF-Ray` header, or generates a UUID
+  (`crypto.randomUUID()`) when the header is absent, and binds it to the logger via
+  `logger.child({ correlationId })`.
+- Logs the **request** at `trace`: `{ method, url, headers, cookies }`.
+- Stores the child logger in `c.var.LOGGER` before calling `next()`.
+- Logs the **response** at `trace`: `{ status, durationMs, headers, cookies, body }`,
+  where `body` is the first 64 bytes of the payload (with `...` appended when longer).
+
+### Options
+
+`loggingMiddleware` also accepts an options object instead of an environment string:
+
+```ts
+loggingMiddleware({
+  environment: "production", // overrides c.env.ENVIRONMENT
+  level: "trace", // override the resolved level (see note below)
+  transport: createCaptureTransport() // override the resolved transport (handy in tests)
+});
+```
+
+> **Level note:** the request and response are logged at `trace`. Because
+> `resolveLoggerConfig("production", "worker")` selects `warn`, request/response logs
+> are **suppressed in production** unless you pass `level: "trace"`. This keeps verbose
+> per-request logging a development/test concern by default.
+
+### Sensitive data handling
+
+Header logging is designed to avoid leaking secrets (see the security warning below):
+
+- The `Authorization` and `CF-Access-Jwt-Authorization` headers are reduced to
+  `"[redacted]"` — only their presence is recorded, never the bearer token.
+- Cookies are **never** logged with their values. The request `Cookie` header and the
+  response `Set-Cookie` headers are recorded as an array of cookie **names** only (under
+  `cookies`), and the raw `cookie`/`set-cookie` headers are omitted from `headers`.
 
 ## Vitest capture example
 

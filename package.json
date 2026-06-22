@@ -28,6 +28,10 @@
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
+    },
+    "./hono": {
+      "types": "./dist/hono/index.d.ts",
+      "import": "./dist/hono/index.js"
     }
   },
   "scripts": {
@@ -47,9 +51,13 @@
     "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
+    "hono": ">= 4",
     "react": ">= 19"
   },
   "peerDependenciesMeta": {
+    "hono": {
+      "optional": true
+    },
     "react": {
       "optional": true
     }
@@ -66,6 +74,7 @@
     "@vitest/coverage-istanbul": "^4.1.7",
     "eslint": "^9.39.4",
     "globals": "^16.5.0",
+    "hono": "^4.12.0",
     "jsdom": "^26.1.0",
     "npm-run-all2": "^8.0.4",
     "prettier": "^3.8.3",

@@ -1,4 +1,8 @@
 {
   "files": [],
-  "references": [{ "path": "./src" }, { "path": "./src/react" }]
+  "references": [
+    { "path": "./src" }, 
+    { "path": "./src/react" }, 
+    { "path": "./src/hono" }
+  ]
 }

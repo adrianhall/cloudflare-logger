@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "outDir": "../../.tsbuild/hono",
+    "tsBuildInfoFile": "../../.tsbuild/hono.tsbuildinfo",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": []
+  },
+  "include": ["**/*.ts"],
+  "references": [{ "path": "../tsconfig.json" }]
+}

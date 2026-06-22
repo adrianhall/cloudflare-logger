@@ -28,6 +28,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const distIndex = path.join(root, "dist/index.js");
 const distReactIndex = path.join(root, "dist/react/index.js");
+const distHonoIndex = path.join(root, "dist/hono/index.js");
 
 // ---------------------------------------------------------------------------
 // Import built dist modules directly.
@@ -38,6 +39,7 @@ const distReactIndex = path.join(root, "dist/react/index.js");
 // time and the entire suite will fail with a clear error.
 import * as core from "../../dist/index.js";
 import * as reactEntry from "../../dist/react/index.js";
+import * as honoEntry from "../../dist/hono/index.js";
 
 // ---------------------------------------------------------------------------
 // Core entry point — exported symbols
@@ -96,6 +98,11 @@ describe("dist/index.js — core exports", () => {
     expect(keys).not.toContain("useLogger");
   });
 
+  it("does not export Hono symbols (loggingMiddleware)", () => {
+    const keys = Object.keys(core);
+    expect(keys).not.toContain("loggingMiddleware");
+  });
+
   it("exports exactly the documented runtime symbols", () => {
     const runtimeExports = Object.keys(core).sort();
     expect(runtimeExports).toStrictEqual(
@@ -125,6 +132,34 @@ describe("dist/index.js — React-free guarantee", () => {
     // core barrel or any module it re-exports transitively. We check the
     // barrel itself; the workers test project validates transitive safety.
     expect(source).not.toMatch(/['"]react['"]/);
+  });
+
+  it("dist/index.js source does not contain a Hono import", () => {
+    const source = readFileSync(distIndex, "utf8");
+    // The core entry point must not import the optional `hono` peer dependency.
+    expect(source).not.toMatch(/['"]hono['"]/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Hono entry point — exported symbols
+// ---------------------------------------------------------------------------
+
+describe("dist/hono/index.js — Hono exports", () => {
+  it("exports loggingMiddleware as a function", () => {
+    expect(typeof honoEntry.loggingMiddleware).toBe("function");
+  });
+
+  it("exports exactly the documented runtime symbols", () => {
+    const runtimeExports = Object.keys(honoEntry).sort();
+    expect(runtimeExports).toStrictEqual(["loggingMiddleware"].sort());
+  });
+
+  it("loggingMiddleware returns a middleware function", () => {
+    const middleware = honoEntry.loggingMiddleware("test");
+    expect(typeof middleware).toBe("function");
+    // Hono middleware has arity (c, next).
+    expect(middleware.length).toBe(2);
   });
 });
 
@@ -309,6 +344,23 @@ describe("npm pack --dry-run", () => {
       expect(output).toContain(file);
     }
   });
+
+  it("includes all expected hono dist files", () => {
+    const output = execSync("npm pack --dry-run --ignore-scripts 2>&1", {
+      cwd: root,
+      encoding: "utf8"
+    });
+    const expectedHono = [
+      "dist/hono/index.js",
+      "dist/hono/middleware.js",
+      "dist/hono/preview.js",
+      "dist/hono/headers.js",
+      "dist/hono/types.js"
+    ];
+    for (const file of expectedHono) {
+      expect(output).toContain(file);
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -324,6 +376,10 @@ describe("dist/ file existence", () => {
     expect(statSync(distReactIndex).isFile()).toBe(true);
   });
 
+  it("dist/hono/index.js exists and is a file", () => {
+    expect(statSync(distHonoIndex).isFile()).toBe(true);
+  });
+
   it("dist/index.d.ts exists", () => {
     const dts = path.join(root, "dist/index.d.ts");
     expect(statSync(dts).isFile()).toBe(true);
@@ -331,6 +387,11 @@ describe("dist/ file existence", () => {
 
   it("dist/react/index.d.ts exists", () => {
     const dts = path.join(root, "dist/react/index.d.ts");
+    expect(statSync(dts).isFile()).toBe(true);
+  });
+
+  it("dist/hono/index.d.ts exists", () => {
+    const dts = path.join(root, "dist/hono/index.d.ts");
     expect(statSync(dts).isFile()).toBe(true);
   });
 });

@@ -8,5 +8,5 @@
     "types": ["@cloudflare/workers-types"]
   },
   "include": ["**/*.ts"],
-  "exclude": ["react"]
+  "exclude": ["react", "hono"]
 }

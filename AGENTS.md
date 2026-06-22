@@ -11,12 +11,13 @@ A small, **synchronous**, structured logging library that runs across Vitest,
 browsers, and Cloudflare Workers. The core is dependency-free. React lives behind
 the `/react` subpath only.
 
-Two public entry points:
+Three public entry points:
 
-| Import                                | Purpose                                        | Runtime                      |
-| ------------------------------------- | ---------------------------------------------- | ---------------------------- |
-| `@adrianhall/cloudflare-logger`       | Core logger, types, transports, config helper. | Browser, Worker, Node tests. |
-| `@adrianhall/cloudflare-logger/react` | React provider and hook.                       | Browser React applications.  |
+| Import                                | Purpose                                        | Runtime                        |
+| ------------------------------------- | ---------------------------------------------- | ------------------------------ |
+| `@adrianhall/cloudflare-logger`       | Core logger, types, transports, config helper. | Browser, Worker, Node tests.   |
+| `@adrianhall/cloudflare-logger/react` | React provider and hook.                       | Browser React applications.    |
+| `@adrianhall/cloudflare-logger/hono`  | Hono request/response logging middleware.      | Hono-based Cloudflare Workers. |
 
 ## Non-negotiable quality gates
 
@@ -109,18 +110,26 @@ src/
     context.ts        # React context object
     LoggingProvider.tsx
     useLogger.ts
+  hono/
+    index.ts          # /hono barrel (exports loggingMiddleware + public types)
+    middleware.ts     # loggingMiddleware()
+    headers.ts        # redactHeaders/cookieName/parseCookieHeader (not exported from barrel)
+    preview.ts        # previewResponseBody/readResponseBodyPreview (not exported from barrel)
+    types.ts          # LoggingMiddlewareOptions, LoggerBindings, LoggerVariables
 test/
-  node/      # plain Node — pure logic, Node-safe transports
+  node/      # plain Node — pure logic, Node-safe transports, hono helpers
   browser/   # jsdom — browser transport + React integration
-  workers/   # workerd via @cloudflare/vitest-pool-workers
+  workers/   # workerd via @cloudflare/vitest-pool-workers — incl. hono middleware
   package/   # built dist/ import + export validation
 ```
 
 ## Architectural rules (do not violate)
 
-- **Core stays React-free.** `src/index.ts` and anything it imports must never
-  import React. React belongs only under `src/react/`. A test in the package
-  project guards this.
+- **Core stays React-free and Hono-free.** `src/index.ts` and anything it imports
+  must never import React or Hono. React belongs only under `src/react/`; Hono
+  belongs only under `src/hono/`. Tests in the package project guard both.
+- **`hono` is an optional peer dependency** used only by the `/hono` subpath, exactly
+  like `react` for `/react`. Do not import `hono` from core or `/react`.
 - **Core stays Worker-safe.** No Node-only APIs in `src/**` (except test/tooling
   files). The `workers` Vitest project runs without `nodejs_compat` on purpose —
   do not add it to satisfy a dependency without documenting why.
@@ -213,7 +222,7 @@ Wherever the file contains an installation instruction or a reference to a
 specific release tag, update it to `X.Y.Z`. At minimum this means any
 `npm install` or `package.json` snippet that pins the git tag:
 
-```
+```text
 github:adrianhall/cloudflare-logger#X.Y.Z
 ```
 
@@ -284,7 +293,7 @@ git push origin X.Y.Z
 
 Consumers depend on the tag directly:
 
-```
+```text
 github:adrianhall/cloudflare-logger#X.Y.Z
 ```
 

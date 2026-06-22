@@ -79,14 +79,15 @@ The Worker test project should run without `nodejs_compat` unless a specific, do
 
 ## 6. Public Package Surface
 
-The package has two public entry points.
+The package has three public entry points.
 
-| Import                                | Purpose                                                | Runtime                      |
-| ------------------------------------- | ------------------------------------------------------ | ---------------------------- |
-| `@adrianhall/cloudflare-logger`       | Core logger, types, transports, default config helper. | Browser, Worker, Node tests. |
-| `@adrianhall/cloudflare-logger/react` | React provider and hook.                               | Browser React applications.  |
+| Import                                | Purpose                                                | Runtime                        |
+| ------------------------------------- | ------------------------------------------------------ | ------------------------------ |
+| `@adrianhall/cloudflare-logger`       | Core logger, types, transports, default config helper. | Browser, Worker, Node tests.   |
+| `@adrianhall/cloudflare-logger/react` | React provider and hook.                               | Browser React applications.    |
+| `@adrianhall/cloudflare-logger/hono`  | Hono request/response logging middleware.              | Hono-based Cloudflare Workers. |
 
-The core entry point must not import React. The `/react` entry point may import React and may depend on React peer dependencies.
+The core entry point must not import React or Hono. The `/react` entry point may import React and may depend on the React peer dependency. The `/hono` entry point may import Hono and may depend on the Hono peer dependency. Both `react` and `hono` are optional peer dependencies.
 
 ### 6.1 Recommended Core Exports
 
@@ -124,6 +125,17 @@ export { LoggingProvider } from "./LoggingProvider.js";
 export { useLogger } from "./useLogger.js";
 export type { LoggingProviderProps } from "./LoggingProvider.js";
 ```
+
+### 6.2a Recommended Hono Exports
+
+```ts
+export { loggingMiddleware } from "./middleware.js";
+export type { LoggerBindings, LoggerVariables, LoggingMiddlewareOptions } from "./types.js";
+```
+
+Internal helpers under `src/hono/` (`headers.ts`, `preview.ts`) are exported from their
+modules for direct unit testing but are intentionally not re-exported from the `/hono`
+barrel, so they never become public API.
 
 ### 6.3 Surface Area Rules
 
@@ -176,6 +188,10 @@ Rationale:
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
+    },
+    "./hono": {
+      "types": "./dist/hono/index.d.ts",
+      "import": "./dist/hono/index.js"
     }
   },
   "scripts": {
@@ -195,9 +211,13 @@ Rationale:
     "test:coverage": "vitest run --coverage"
   },
   "peerDependencies": {
+    "hono": ">= 4",
     "react": ">= 19"
   },
   "peerDependenciesMeta": {
+    "hono": {
+      "optional": true
+    },
     "react": {
       "optional": true
     }
@@ -205,7 +225,7 @@ Rationale:
 }
 ```
 
-`react-dom` should not be a peer dependency unless the implementation imports it or the tests require it as a public peer. React context and hooks only require `react`.
+`react-dom` should not be a peer dependency unless the implementation imports it or the tests require it as a public peer. React context and hooks only require `react`. `hono` is an optional peer dependency used only by the `/hono` subpath; core and `/react` consumers are not required to install it.
 
 ### 7.2 Build Output
 
@@ -247,6 +267,17 @@ dist/
     LoggingProvider.d.ts
     useLogger.js
     useLogger.d.ts
+  hono/
+    index.js
+    index.d.ts
+    middleware.js
+    middleware.d.ts
+    headers.js
+    headers.d.ts
+    preview.js
+    preview.d.ts
+    types.js
+    types.d.ts
 ```
 
 The package should be validated by direct-import tests against `dist/` before tagging.
@@ -660,7 +691,12 @@ Policy table:
 
 `detectRuntime()` is not exported in v1. Runtime detection is easy to get subtly wrong, especially because Node, Workers, service workers, and browser-like test environments overlap. Applications are expected to know whether they are constructing a browser logger or a Worker logger.
 
-## 16. React Subpath
+## 16. Framework Subpaths
+
+The package ships two optional framework subpaths behind peer dependencies: `/react`
+and `/hono`. Neither is imported by the core entry point.
+
+### 16.1 React Subpath
 
 The React subpath provides context wiring only. It does not construct loggers and does not read environment.
 
@@ -721,6 +757,72 @@ function Widget() {
 }
 ```
 
+### 16.2 Hono Subpath
+
+The Hono subpath provides `loggingMiddleware`, which attaches a request-scoped logger
+to the Hono context and logs each request and response.
+
+```ts
+import type { Environment, Logger, LogLevel, Transport } from "@adrianhall/cloudflare-logger";
+import type { MiddlewareHandler } from "hono";
+
+export interface LoggingMiddlewareOptions {
+  readonly environment?: Environment;
+  readonly level?: LogLevel;
+  readonly transport?: Transport;
+}
+
+export interface LoggerBindings {
+  readonly ENVIRONMENT?: Environment;
+}
+
+export interface LoggerVariables {
+  LOGGER: Logger;
+}
+
+export function loggingMiddleware(
+  argument?: Environment | LoggingMiddlewareOptions
+): MiddlewareHandler;
+```
+
+Required behavior, per request:
+
+- The single argument is optional and may be either an environment name or a
+  `LoggingMiddlewareOptions` object. When the environment is not supplied, it is read
+  from `c.env.ENVIRONMENT` at request time.
+- The logger is built with `createLogger(resolveLoggerConfig(environment, "worker"))`.
+  `options.level` and `options.transport` override the resolved level and transport
+  (primarily for tests and advanced wiring).
+- A correlation id is derived from the `CF-Ray` header, or `crypto.randomUUID()` when
+  the header is absent, and bound via `logger.child({ correlationId })`.
+- The request is logged at `trace` with `{ method, url, headers, cookies }`.
+- The child logger is stored in `c.var.LOGGER` before `next()` is called.
+- After `next()`, the response is logged at `trace` with
+  `{ status, durationMs, headers, cookies, body }`.
+- `body` is the first 64 bytes (UTF-8) of the cloned response payload, with `"..."`
+  appended only when the body is longer. Reading the body must never throw into the
+  application; failures yield an empty preview.
+
+Header and cookie handling (security):
+
+- Cookie values are never logged. The request `Cookie` header and response `Set-Cookie`
+  headers are recorded as an array of cookie names under `cookies`; the raw
+  `cookie`/`set-cookie` headers are omitted from `headers`.
+- The `Authorization` and `CF-Access-Jwt-Authorization` headers are reduced to
+  `"[redacted]"` so only their presence is recorded, never the token.
+
+Level behavior:
+
+- The request/response are logged at `trace`. Because the `production` worker policy
+  resolves to `warn`, request/response logs are suppressed in production unless
+  `options.level` lowers the threshold. This is intentional: verbose per-request logging
+  is a development/test concern by default.
+
+The middleware return type uses Hono's default `MiddlewareHandler` (env `any`), so it can
+be applied to any `Hono` instance with `app.use("*", ...)`. Consumers may type their app
+with `LoggerBindings`/`LoggerVariables` to get static typing for `c.env.ENVIRONMENT` and
+`c.var.LOGGER`.
+
 ## 17. File Layout
 
 ```text
@@ -746,6 +848,12 @@ src/
     LoggingProvider.tsx
     context.ts
     useLogger.ts
+  hono/
+    index.ts
+    middleware.ts
+    headers.ts
+    preview.ts
+    types.ts
 test/
   node/
     levels.test.ts
@@ -757,12 +865,16 @@ test/
     transports.console.test.ts
     transports.silent.test.ts
     transports.structured.test.ts
+    hono/
+      headers.test.ts
+      preview.test.ts
   browser/
     transports.browser.test.ts
     react.test.tsx
     resolve.browser.test.ts
   workers/
     worker-compat.test.ts
+    hono.test.ts
   package/
     dist-import.test.ts
 README.md
@@ -794,13 +906,19 @@ Recommended configuration approach:
 
 Recommended tsconfig split:
 
-| Config                    | Purpose                                          |
-| ------------------------- | ------------------------------------------------ |
-| `tsconfig.base.json`      | Shared strict compiler options.                  |
-| `src/tsconfig.json`       | Core source typecheck.                           |
-| `src/react/tsconfig.json` | React source typecheck with JSX and DOM.         |
-| `tsconfig.build.json`     | Emit declarations and JavaScript to `dist/`.     |
-| `test/*/tsconfig.json`    | Test-project-specific globals and runtime types. |
+| Config                    | Purpose                                                                    |
+| ------------------------- | -------------------------------------------------------------------------- |
+| `tsconfig.base.json`      | Shared strict compiler options.                                            |
+| `src/tsconfig.json`       | Core source typecheck (excludes `react`, `hono`).                          |
+| `src/react/tsconfig.json` | React source typecheck with JSX and DOM.                                   |
+| `src/hono/tsconfig.json`  | Hono source typecheck with DOM lib (for `crypto`, `Headers.getSetCookie`). |
+| `tsconfig.build.json`     | Emit declarations and JavaScript to `dist/`.                               |
+| `test/*/tsconfig.json`    | Test-project-specific globals and runtime types.                           |
+
+The `/hono` source project uses the DOM lib rather than `@cloudflare/workers-types`
+because `Headers.getSetCookie()` is present in TypeScript's `lib.dom` but not in the
+default workers-types entry. The build (`tsconfig.build.json`) already uses the DOM lib,
+so source and emitted types stay consistent.
 
 ## 19. Tooling
 
@@ -958,12 +1076,31 @@ React:
 - Logging routes through provided logger transport.
 - Documentation examples avoid render-time logging.
 
+Hono (helpers, in `test/node/hono/`):
+
+- `cookieName` extracts the name with and without `=`.
+- `parseCookieHeader` returns `[]` for null/undefined/empty and names for multiple cookies.
+- `redactHeaders` omits cookie/set-cookie, redacts sensitive headers, preserves others.
+- `previewResponseBody` returns the body within the limit and truncates with `"..."` past it.
+- `readResponseBodyPreview` reads/clones a normal body and returns `""` when reading throws.
+
+Hono (middleware integration, in `test/workers/`):
+
+- Request and response are logged at `trace` with an injected capture transport.
+- Environment resolves from the argument and from `c.env.ENVIRONMENT`.
+- Correlation id comes from `CF-Ray`, with a `crypto.randomUUID()` fallback.
+- Sensitive headers are redacted and only cookie names are logged.
+- Long response bodies are truncated in the log.
+- `c.var.LOGGER` is set for downstream handlers.
+
 Package:
 
 - `npm run build` succeeds.
 - `npm pack --dry-run --ignore-scripts` includes expected files.
 - Built `dist/index.js` can be imported directly.
 - Built `dist/react/index.js` can be imported directly when React is installed.
+- Built `dist/hono/index.js` can be imported directly when Hono is installed.
+- The core entry point does not import React or Hono.
 - Exported symbols match the documented public API.
 
 ### 20.2 Coverage
@@ -1247,13 +1384,32 @@ Acceptance criteria:
 - `dist/` is committed and current.
 - The package can be consumed from a git tag without running `prepare`.
 
+### Phase 11: Hono Subpath
+
+Added after v1.0.0 as the `/hono` framework subpath (see §16.2).
+
+Tasks:
+
+- Add `hono` as an optional peer dependency and the `./hono` export.
+- Implement `loggingMiddleware`, the `headers.ts`/`preview.ts` helpers, and public types.
+- Add a composite `src/hono/tsconfig.json` (DOM lib) and wire it into the build and `tsc -b`.
+- Add Node helper tests and a workerd middleware integration test.
+- Extend the package import/export validation tests to cover `dist/hono`.
+
+Acceptance criteria:
+
+- `loggingMiddleware` logs request and response with correlation id, redacted headers,
+  cookie names only, and a 64-byte body preview.
+- The core entry point remains free of `react` and `hono` imports.
+- 100% coverage is maintained and `npm run check` passes.
+
 ## 26. Follow-On Work
 
 Deferred features:
 
 - Redaction support, likely as `withRedaction(transport, options)` or a `/redaction` subpath.
-- Request ID and correlation ID conventions.
-- Hono middleware under `/hono` once at least one concrete consumer shape is known.
+- Request ID and correlation ID conventions for the core (the `/hono` middleware already
+  provides a per-request correlation id).
 - Async transports.
 - Flush API.
 - OpenTelemetry integration.

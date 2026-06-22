@@ -33,6 +33,12 @@ React support requires React 19 as a peer dependency:
 npm install github:adrianhall/cloudflare-logger#1.0.0 react@^19
 ```
 
+The Hono middleware requires Hono 4 as a peer dependency:
+
+```sh
+npm install github:adrianhall/cloudflare-logger#1.0.0 hono@^4
+```
+
 The package commits `dist/` to release tags. Consumers do **not** need to run a build
 step — install directly from the git tag.
 
@@ -44,10 +50,15 @@ import { createLogger, resolveLoggerConfig } from "@adrianhall/cloudflare-logger
 
 // React provider and hook — only import in browser React code
 import { LoggingProvider, useLogger } from "@adrianhall/cloudflare-logger/react";
+
+// Hono middleware — only import in Hono-based Workers
+import { loggingMiddleware } from "@adrianhall/cloudflare-logger/hono";
 ```
 
 - Never import from `@adrianhall/cloudflare-logger/react` in Worker code or core
   modules that run in Workers.
+- Only import from `@adrianhall/cloudflare-logger/hono` in Hono-based Worker code. It
+  requires the optional `hono` peer dependency.
 - Use `.js` extensions in source imports for correct emitted ESM (the package itself
   does this internally).
 - Use `import type` for type-only imports.
@@ -355,7 +366,97 @@ describe("worker handler", () => {
 });
 ```
 
+## Hono usage
+
+The `@adrianhall/cloudflare-logger/hono` subpath provides `loggingMiddleware`, which
+attaches a request-scoped logger to the Hono context and logs each request and
+response. `hono` is an optional peer dependency used only by this subpath; the core
+entry point never imports it.
+
+### Middleware setup
+
+```ts
+import { Hono } from "hono";
+import { loggingMiddleware } from "@adrianhall/cloudflare-logger/hono";
+import type { LoggerBindings, LoggerVariables } from "@adrianhall/cloudflare-logger/hono";
+
+// Type the app so c.env.ENVIRONMENT and c.var.LOGGER are statically known.
+const app = new Hono<{ Bindings: LoggerBindings; Variables: LoggerVariables }>();
+
+app.use("*", loggingMiddleware("production")); // explicit environment
+// app.use("*", loggingMiddleware());          // falls back to c.env.ENVIRONMENT
+
+app.get("/", (c) => {
+  c.var.LOGGER.info("handling request"); // request-scoped child logger
+  return c.text("ok");
+});
+
+export default app;
+```
+
+Per request, the middleware:
+
+- Resolves the environment from the argument, else `c.env.ENVIRONMENT`, and builds a
+  Worker logger via `resolveLoggerConfig(environment, "worker")`.
+- Sets a **correlation id** from the `CF-Ray` header, or `crypto.randomUUID()` when
+  absent, bound via `logger.child({ correlationId })`.
+- Logs the **request** at `trace`: `{ method, url, headers, cookies }`.
+- Stores the child logger in `c.var.LOGGER` before `next()`.
+- Logs the **response** at `trace`: `{ status, durationMs, headers, cookies, body }`
+  where `body` is the first 64 bytes (with `...` appended when longer).
+
+### Options object
+
+```ts
+loggingMiddleware({
+  environment: "production", // overrides c.env.ENVIRONMENT
+  level: "trace", // override the resolved level
+  transport: createCaptureTransport() // override the resolved transport (tests)
+});
+```
+
+### Level behavior in production
+
+Request/response are logged at `trace`, but `resolveLoggerConfig("production", "worker")`
+selects `warn`, so they are **suppressed in production** unless you pass `level: "trace"`.
+This keeps verbose per-request logging a development/test concern by default.
+
+### Sensitive data is stripped from header logs
+
+- `Authorization` and `CF-Access-Jwt-Authorization` are reduced to `"[redacted]"` —
+  only their presence is recorded, never the token.
+- Cookies are logged as **names only** (array under `cookies`); the raw `cookie` /
+  `set-cookie` headers are omitted. Cookie values are never logged.
+
+### Testing the middleware
+
+Inject a capture transport and force the level so trace records are captured:
+
+```ts
+import { Hono } from "hono";
+import { createCaptureTransport } from "@adrianhall/cloudflare-logger";
+import { loggingMiddleware } from "@adrianhall/cloudflare-logger/hono";
+
+const capture = createCaptureTransport();
+const app = new Hono();
+app.use("*", loggingMiddleware({ environment: "test", transport: capture }));
+app.get("/", (c) => c.text("ok"));
+
+await app.request("/");
+expect(capture.find("trace")).toHaveLength(2); // request + response
+```
+
 ## Anti-patterns
+
+### Do not import `/hono` outside Hono Workers
+
+```ts
+// BAD — pulls the optional hono peer into non-Hono code
+import { loggingMiddleware } from "@adrianhall/cloudflare-logger/hono";
+
+// GOOD — only Hono-based Workers import the /hono subpath
+import { createLogger } from "@adrianhall/cloudflare-logger";
+```
 
 ### Do not construct a logger inside a React component
 
@@ -448,8 +549,9 @@ Worker logger. Pass `"browser"` or `"worker"` explicitly to `resolveLoggerConfig
 The following features are explicitly deferred to post-v1:
 
 - **Redaction** — no secret/PII redaction in v1. Planned as `withRedaction(transport, options)` or a `/redaction` subpath.
-- **Request ID / correlation ID** — no built-in convention; set via `logger.child({ requestId })`.
-- **Hono middleware** — planned as a `/hono` subpath once a concrete consumer shape is known.
+- **Request ID / correlation ID** — no built-in convention in the core; set via
+  `logger.child({ requestId })`. The `/hono` middleware does provide a per-request
+  correlation id (see "Hono usage").
 - **Async transports** — all transports are synchronous in v1.
 - **Flush API** — no flush mechanism in v1.
 - **OpenTelemetry integration** — deferred.
