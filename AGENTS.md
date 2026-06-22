@@ -221,18 +221,27 @@ succeed before moving to the next.
 Choose `X.Y.Z` following [Semantic Versioning](https://semver.org/). The tag
 format is `X.Y.Z` — no `v` prefix.
 
-### 2. Update `package.json`
+### 2. Create a release branch
+
+All release work happens on a dedicated branch. Never commit release changes
+directly to `main`.
+
+```sh
+git checkout -b releases/X.Y.Z
+```
+
+### 3. Update `package.json`
 
 Set `"version"` to the new `X.Y.Z` value.
 
-### 3. Update `CHANGELOG.md`
+### 4. Update `CHANGELOG.md`
 
 Rename the `## [Unreleased]` heading to `## [X.Y.Z] — YYYY-MM-DD` and add a
 new empty `## [Unreleased]` section above it. Document all changes since the
 previous release under the appropriate subsections (`Added`, `Changed`,
 `Fixed`, `Removed`).
 
-### 4. Update `README.md`
+### 5. Update `README.md`
 
 Wherever the file contains an installation instruction or a reference to a
 specific release tag, update it to `X.Y.Z`. At minimum this means any
@@ -242,12 +251,12 @@ specific release tag, update it to `X.Y.Z`. At minimum this means any
 github:adrianhall/cloudflare-logger#X.Y.Z
 ```
 
-### 5. Update `skills/cloudflare-logger/SKILL.md`
+### 6. Update `skills/cloudflare-logger/SKILL.md`
 
 Apply the same version-tag update to any installation or import snippets in
 the skill file so agents consuming the skill get the correct pin.
 
-### 6. Run the quality gates
+### 7. Run the quality gates
 
 Both commands must exit zero:
 
@@ -259,7 +268,7 @@ npm run test:coverage  # all Vitest projects + 100% coverage
 If either fails, fix the underlying issue before continuing. Do not lower
 coverage thresholds or suppress lint errors to force a pass.
 
-### 7. Rebuild and stage `dist/`
+### 8. Rebuild and stage `dist/`
 
 ```sh
 npm run release        # tsc build + git add dist
@@ -268,7 +277,7 @@ npm run release        # tsc build + git add dist
 This regenerates `dist/` from source and stages all changed files under
 `dist/`. Do not hand-edit `dist/`.
 
-### 8. Verify the staged changes
+### 9. Verify the staged changes
 
 ```sh
 git diff --cached --stat
@@ -284,7 +293,7 @@ The staged set must include:
 
 If unintended files are staged, unstage them before committing.
 
-### 9. Commit with a conventional commit message
+### 10. Commit with a conventional commit message
 
 ```sh
 git commit -m "chore: release X.Y.Z"
@@ -292,20 +301,29 @@ git commit -m "chore: release X.Y.Z"
 
 Include all staged files (source, docs, and `dist/`) in a single commit.
 
-### 10. Create the release tag
+### 11. Push the branch and open a pull request
 
 ```sh
-git tag X.Y.Z
+git push origin releases/X.Y.Z
 ```
 
-No `v` prefix. The tag must point to the commit created in step 9.
+Open a pull request from `releases/X.Y.Z` into `main`. Title it
+`chore: release X.Y.Z`. Wait for CI to pass and the PR to be approved before
+merging.
 
-### 11. Push the commit and tag
+### 12. Tag after the PR is merged
+
+Once the PR is merged into `main`, create and push the tag **on the merge
+commit** (not on the release branch):
 
 ```sh
-git push origin main
+git checkout main
+git pull origin main
+git tag X.Y.Z
 git push origin X.Y.Z
 ```
+
+No `v` prefix. The tag must point to the merge commit on `main`.
 
 Consumers depend on the tag directly:
 

@@ -24,19 +24,19 @@ dependency-free. React lives behind the `/react` subpath only.
 ## Installation
 
 ```sh
-npm install github:adrianhall/cloudflare-logger#1.0.1
+npm install github:adrianhall/cloudflare-logger#1.0.2
 ```
 
 React support requires React 19 as a peer dependency:
 
 ```sh
-npm install github:adrianhall/cloudflare-logger#1.0.1 react@^19
+npm install github:adrianhall/cloudflare-logger#1.0.2 react@^19
 ```
 
 The Hono middleware requires Hono 4 as a peer dependency:
 
 ```sh
-npm install github:adrianhall/cloudflare-logger#1.0.1 hono@^4
+npm install github:adrianhall/cloudflare-logger#1.0.2 hono@^4
 ```
 
 The package commits `dist/` to release tags. Consumers do **not** need to run a build
