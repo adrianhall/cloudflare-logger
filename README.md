@@ -6,19 +6,19 @@ tests, local development, browsers, and Cloudflare Workers.
 ## Install
 
 ```sh
-npm install github:adrianhall/cloudflare-logger#1.0.0
+npm install github:adrianhall/cloudflare-logger#1.0.1
 ```
 
 React support requires React 19 or later as a peer dependency:
 
 ```sh
-npm install github:adrianhall/cloudflare-logger#1.0.0 react@^19
+npm install github:adrianhall/cloudflare-logger#1.0.1 react@^19
 ```
 
 The Hono middleware requires Hono 4 or later as a peer dependency:
 
 ```sh
-npm install github:adrianhall/cloudflare-logger#1.0.0 hono@^4
+npm install github:adrianhall/cloudflare-logger#1.0.1 hono@^4
 ```
 
 ## Quick start
@@ -411,7 +411,7 @@ If `dist/` is missing, you may have installed from a branch rather than a releas
 Use a tag reference:
 
 ```sh
-npm install github:adrianhall/cloudflare-logger#1.0.0
+npm install github:adrianhall/cloudflare-logger#1.0.1
 ```
 
 **TypeScript cannot find types**:
