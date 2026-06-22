@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Published package now includes `src/` so emitted JS source maps (`dist/**/*.js.map`) and
+  declaration maps (`dist/**/*.d.ts.map`) can resolve their source references inside
+  `node_modules`. Eliminates "Sourcemap … points to missing source files" warnings under
+  Vite, Rollup, esbuild, and Vitest consumers, and restores "Go to Definition" from `.d.ts`
+  into library source. Fixes #8.
+
 ## [1.0.1] — 2026-06-22
 
 ### Added

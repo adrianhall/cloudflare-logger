@@ -295,12 +295,14 @@ describe("npm pack --dry-run", () => {
     expect(output).toContain("skills/cloudflare-logger/SKILL.md");
   });
 
-  it("does not include src/ source files", () => {
+  it("includes src/ source files (so source maps resolve in consumers)", () => {
     const output = execSync("npm pack --dry-run --ignore-scripts 2>&1", {
       cwd: root,
       encoding: "utf8"
     });
-    expect(output).not.toMatch(/\bsrc\//);
+    expect(output).toMatch(/\bsrc\//);
+    expect(output).toContain("src/logger.ts");
+    expect(output).toContain("src/index.ts");
   });
 
   it("does not include test/ files", () => {

@@ -179,7 +179,7 @@ Rationale:
     "node": ">= 24",
     "npm": ">= 11"
   },
-  "files": ["dist", "skills", "README.md", "LICENSE"],
+  "files": ["dist", "src", "skills", "README.md", "LICENSE"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -226,6 +226,8 @@ Rationale:
 ```
 
 `react-dom` should not be a peer dependency unless the implementation imports it or the tests require it as a public peer. React context and hooks only require `react`. `hono` is an optional peer dependency used only by the `/hono` subpath; core and `/react` consumers are not required to install it.
+
+`src/` is published so that the emitted JS source maps (`dist/**/*.js.map`) and declaration maps (`dist/**/*.d.ts.map`) can resolve their `../src/…` source references inside `node_modules`. Without it, bundlers and editors emit "Sourcemap … points to missing source files" warnings.
 
 ### 7.2 Build Output
 
