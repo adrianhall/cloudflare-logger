@@ -1,6 +1,6 @@
 {
   "name": "@adrianhall/cloudflare-logger",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A small, synchronous, structured logging library for tests, browsers, and Cloudflare Workers.",
   "license": "MIT",
   "author": "Adrian Hall",

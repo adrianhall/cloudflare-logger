@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] — 2026-06-22
+
 ### Fixed
 
 - Published package now includes `src/` so emitted JS source maps (`dist/**/*.js.map`) and
