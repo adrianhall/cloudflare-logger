@@ -434,9 +434,15 @@ Run `npm run release` to rebuild and re-stage `dist/`, then commit the result.
 
 ```sh
 npm install
+npm run setup:hooks    # one-time per clone: activates the pre-commit hook
 npm run check          # format, lint, types, dist freshness, pack
 npm run test:coverage  # all Vitest projects with 100% coverage requirement
 ```
+
+A pre-commit hook (powered by [Husky](https://typicode.github.io/husky/)) automatically
+runs Prettier on staged files and re-stages the result before each commit, so formatting
+is fixed before it ever reaches CI. Run `npm run setup:hooks` once after cloning to
+activate it. CI remains the authoritative check — the hook is a developer convenience only.
 
 ## Contributing
 
